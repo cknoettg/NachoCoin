@@ -1,0 +1,22 @@
+[Unit]
+Description=NachoCoin's distributed currency daemon
+After=network.target
+
+[Service]
+User=nachocoincore
+Group=nachocoincore
+
+Type=forking
+PIDFile=/var/lib/nachocoind/nachocoind.pid
+ExecStart=/usr/bin/nachocoind -daemon -pid=/var/lib/nachocoind/nachocoind.pid \
+-conf=/etc/nachocoincore/nachocoin.conf -datadir=/var/lib/nachocoind -disablewallet
+
+Restart=always
+PrivateTmp=true
+TimeoutStopSec=60s
+TimeoutStartSec=2s
+StartLimitInterval=120s
+StartLimitBurst=5
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,6 @@
+usr/local/bin/nachocoin-qt usr/bin
+share/pixmaps/nachocoin32.xpm usr/share/pixmaps
+share/pixmaps/nachocoin16.xpm usr/share/pixmaps
+share/pixmaps/nachocoin128.png usr/share/pixmaps
+debian/nachocoin-qt.desktop usr/share/applications
+debian/nachocoin-qt.protocol usr/share/kde4/services/

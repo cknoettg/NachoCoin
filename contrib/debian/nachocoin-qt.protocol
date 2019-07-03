@@ -1,0 +1,11 @@
+[Protocol]
+exec=nachocoin-qt '%u'
+protocol=nachocoin
+input=none
+output=none
+helper=true
+listing=
+reading=false
+writing=false
+makedir=false
+deleting=false
