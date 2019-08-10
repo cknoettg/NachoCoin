@@ -50,6 +50,8 @@ struct ChainTxData;
 
 struct LockPoints;
 
+/** Height at which we enforce coinbase split */
+static const int SPLITHEIGHT = 33000;
 /** Default for accepting alerts from the P2P network. */
 static const bool DEFAULT_ALERTS = true;
 /** Default for DEFAULT_WHITELISTRELAY. */
