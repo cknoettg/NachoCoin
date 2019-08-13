@@ -220,7 +220,8 @@ public:
         assert(consensus.hashGenesisBlock == uint256S("0x0000014ff5d91f9bc976156f34d5142c46523ad4bb845e5bb13e3fa7fb535189"));
         assert(genesis.hashMerkleRoot == uint256S("0x818b7339dc6cdb78058dabba0a320efb86f903b25459375da6ee2857785f272e"));
 
-
+         //ipv4
+        vSeeds.push_back(CDNSSeedData("DNSseeder", "nachocoin.tk")); 
         vFixedSeeds.clear();
         vSeeds.clear();
 
@@ -362,7 +363,7 @@ public:
         }
         assert(consensus.hashGenesisBlock == uint256S("0x0000006a9ccef5fe3638a51deab53562c50051fd20646600e4d7e2721235b22a"));
         assert(genesis.hashMerkleRoot == uint256S("0x818b7339dc6cdb78058dabba0a320efb86f903b25459375da6ee2857785f272e"));
-
+       
         vFixedSeeds.clear();
         vSeeds.clear();
 

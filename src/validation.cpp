@@ -2263,13 +2263,40 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
 
     // NACHO : MODIFIED TO CHECK MASTERNODE PAYMENTS AND SUPERBLOCKS
 
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    // start with super basic
+    const CTransaction &ctx = *(block.vtx[0]);
+    if (ctx.vout.size() < 2) {
+       LogPrintf("* coinbase out only has one recipient\n");
+    } else {
+       LogPrintf("* coinbase out has >1 recipients\n");
+    }
+
+    // once we know there are minimum of two payments..
+    CAmount blockReward = nFees + GetBlockSubsidy(pindex->pprev->nBits, pindex->pprev->nHeight, chainparams.GetConsensus());
+    bool fPaysMasternode = false;
+    for (unsigned int i = 1; i < ctx.vout.size(); i++)
+       if (ctx.vout[i].nValue == GetMasternodePayment(pindex->pprev->nHeight, blockReward))
+           fPaysMasternode = true;
+
+    if (fPaysMasternode == false) {
+        LogPrintf("* masternode is not paid\n");
+        if (pindex->nHeight >= SPLITHEIGHT)
+           return state.DoS(0, error("ConnectBlock(NACHO): couldn't find masternode or superblock payments"), REJECT_INVALID, "bad-cb-payee");
+    } else {
+        LogPrintf("* masternode is paid\n");
+    }
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     // It's possible that we simply don't have enough data and this could fail
     // (i.e. block itself could be a correct one and we need to store it),
     // that's why this is in ConnectBlock. Could be the other way around however -
     // the peer who sent us this block is missing some data and wasn't able
     // to recognize that block is actually invalid.
     // TODO: resync data (both ways?) and try to reprocess this block later.
-    CAmount blockReward = nFees + GetBlockSubsidy(pindex->pprev->nBits, pindex->pprev->nHeight, chainparams.GetConsensus());
+    blockReward = nFees + GetBlockSubsidy(pindex->pprev->nBits, pindex->pprev->nHeight, chainparams.GetConsensus());
     std::string strError = "";
     if (!IsBlockValueValid(block, pindex->nHeight, blockReward, strError)) {
         return state.DoS(0, error("ConnectBlock(NACHO): %s", strError), REJECT_INVALID, "bad-cb-amount");
