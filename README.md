@@ -1,5 +1,5 @@
-Nacho Core staging tree 1.0.0
-===============================
+Nacho Core staging tree 0.13
+============================
 
 `master:` [![Build Status]
 
