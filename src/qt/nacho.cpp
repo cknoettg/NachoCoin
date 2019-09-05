@@ -587,7 +587,7 @@ int main(int argc, char *argv[])
 #endif
 
     Q_INIT_RESOURCE(nacho);
-    Q_INIT_RESOURCE(nacho_locale);
+    // Q_INIT_RESOURCE(nacho_locale); deprecated in qt5
 
     BitcoinApplication app(argc, argv);
 #if QT_VERSION > 0x050100
