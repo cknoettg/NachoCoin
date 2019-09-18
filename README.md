@@ -57,3 +57,15 @@ code. This is especially important for large or high-risk changes. It is useful
 to add a test plan to the pull request description if testing the changes is
 not straightforward.
 
+### Dependancies 
+
+Besides the standard build dependancies you will also need BLS.
+
+apt-get update
+apt-get install -y curl build-essential libtool autotools-dev automake pkg-config python3 bsdmainutils cmake
+wget https://github.com/codablock/bls-signatures/archive/v20181101.zip
+unzip v20181101.zip
+cd bls-signatures-20181101
+cmake .
+make install
+cd ..
