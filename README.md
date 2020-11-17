@@ -1,5 +1,7 @@
+
 Nacho Core staging tree 1.2.0
 ===============================
+
 
 `master:` [![Build Status]
 
@@ -7,13 +9,17 @@ What is Nacho?
 ----------------
 
 Nacho is a new digital currency that enables anonymous, instant
-payments to anyone, anywhere in the world. Nacho uses peer-to-peer technology
-to operate with no central authority: managing transactions and issuing money
-are carried out collectively by the network. Nacho Core is the name of the open
-source software which enables the use of this currency.
+
+payments to anyone, anywhere in the world with sports in mind. Nacho will allow users from all over the world to join in fantasy sports leagues by using Nacho as the buy in as well as the pay out! There will no longer be limitations on Countries or States participating as the payouts are not in standard fiat.
+
 
 For more information, as well as an immediately useable, binary version of
-the Nacho Core software, see https://www.minenacho.tk
+the Nacho Core software, see our Wiki or Code.
+
+
+Links
+-------
+Discord: https://discord.gg/Q62s6se
 
 
 License
@@ -47,8 +53,7 @@ There are also [regression and integration tests](/qa) of the RPC interface, wri
 in Python, that are run automatically on the build server.
 These tests can be run (if the [test dependencies](/qa) are installed) with: `qa/pull-tester/rpc-tests.py`
 
-The Travis CI system makes sure that every pull request is built for Windows
-and Linux, OS X, and that unit and sanity tests are automatically run.
+
 
 ### Manual Quality Assurance (QA) Testing
 
@@ -57,3 +62,22 @@ code. This is especially important for large or high-risk changes. It is useful
 to add a test plan to the pull request description if testing the changes is
 not straightforward.
 
+### Dependancies 
+
+Besides the standard build dependancies you will also need BLS.
+
+apt-get update
+
+apt-get install -y curl build-essential libtool autotools-dev automake pkg-config python3 bsdmainutils cmake
+
+wget https://github.com/codablock/bls-signatures/archive/v20181101.zip
+
+unzip v20181101.zip
+
+cd bls-signatures-20181101
+
+cmake .
+
+make install
+
+cd ..

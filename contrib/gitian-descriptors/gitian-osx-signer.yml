@@ -1,7 +1,7 @@
 ---
 name: "nachocoin-dmg-signer"
 suites:
-- "trusty"
+- "bionic"
 architectures:
 - "amd64"
 packages:

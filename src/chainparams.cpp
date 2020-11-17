@@ -107,6 +107,61 @@ static CBlock FindDevNetGenesisBlock(const Consensus::Params& params, const CBlo
     assert(false);
 }
 
+// this one is for testing only
+static Consensus::LLMQParams llmq10_60 = {
+        .type = Consensus::LLMQ_10_60,
+        .name = "llmq_10",
+        .size = 10,
+        .minSize = 6,
+        .threshold = 6,
+
+        .dkgInterval = 24, // one DKG per hour
+        .dkgPhaseBlocks = 2,
+        .dkgMiningWindowStart = 10, // dkgPhaseBlocks * 5 = after finalization
+        .dkgMiningWindowEnd = 18,
+};
+
+static Consensus::LLMQParams llmq50_60 = {
+        .type = Consensus::LLMQ_50_60,
+        .name = "llmq_50_60",
+        .size = 50,
+        .minSize = 40,
+        .threshold = 30,
+
+        .dkgInterval = 24, // one DKG per hour
+        .dkgPhaseBlocks = 2,
+        .dkgMiningWindowStart = 10, // dkgPhaseBlocks * 5 = after finalization
+        .dkgMiningWindowEnd = 18,
+};
+
+static Consensus::LLMQParams llmq400_60 = {
+        .type = Consensus::LLMQ_400_60,
+        .name = "llmq_400_51",
+        .size = 400,
+        .minSize = 300,
+        .threshold = 240,
+
+        .dkgInterval = 24 * 12, // one DKG every 12 hours
+        .dkgPhaseBlocks = 4,
+        .dkgMiningWindowStart = 20, // dkgPhaseBlocks * 5 = after finalization
+        .dkgMiningWindowEnd = 28,
+};
+
+// Used for deployment and min-proto-version signalling, so it needs a higher threshold
+static Consensus::LLMQParams llmq400_85 = {
+        .type = Consensus::LLMQ_400_85,
+        .name = "llmq_400_85",
+        .size = 400,
+        .minSize = 350,
+        .threshold = 340,
+
+        .dkgInterval = 24 * 24, // one DKG every 24 hours
+        .dkgPhaseBlocks = 4,
+        .dkgMiningWindowStart = 20, // dkgPhaseBlocks * 5 = after finalization
+        .dkgMiningWindowEnd = 48, // give it a larger mining window to make sure it is mined
+};
+
+
 /**
  * Main network
  */
@@ -175,6 +230,13 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_BIP147].nWindowSize = 2;
         consensus.vDeployments[Consensus::DEPLOYMENT_BIP147].nThreshold = 2; 
 
+        // Deployment of DIP0003
+        consensus.vDeployments[Consensus::DEPLOYMENT_DIP0003].bit = 3;
+        consensus.vDeployments[Consensus::DEPLOYMENT_DIP0003].nStartTime = 1546300800; // Jan 1st, 2019
+        consensus.vDeployments[Consensus::DEPLOYMENT_DIP0003].nTimeout = 1577836800; // Jan 1st, 2020
+        consensus.vDeployments[Consensus::DEPLOYMENT_DIP0003].nWindowSize = 4032;
+        consensus.vDeployments[Consensus::DEPLOYMENT_DIP0003].nThreshold = 3226; // 80% of 4032
+
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000000000000000000200011"); 
 
@@ -238,9 +300,15 @@ public:
 
         vFixedSeeds = std::vector<SeedSpec6>(pnSeed6_main, pnSeed6_main + ARRAYLEN(pnSeed6_main));
 
+        // long living quorum params
+        consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
+        consensus.llmqs[Consensus::LLMQ_400_60] = llmq400_60;
+        consensus.llmqs[Consensus::LLMQ_400_85] = llmq400_85;
+
         fMiningRequiresPeers = true;
         fDefaultConsistencyChecks = false;
         fRequireStandard = true;
+        fRequireRoutableExternalIP = true;
         fMineBlocksOnDemand = false;
         fAllowMultipleAddressesFromGroup = false;
         fAllowMultiplePorts = false;
@@ -248,7 +316,10 @@ public:
         nPoolMaxTransactions = 3;
         nFulfilledRequestExpireTime = 60*60; // fulfilled requests expire in 1 hour
 
-        strSporkAddress = "1JPKYpPTYxpGa4D2jjdGEyADyUdLPvfn2x";
+        vSporkAddresses = {"1JPKYpPTYxpGa4D2jjdGEyADyUdLPvfn2x"};
+        nMinSporkKeys = 1;
+        fBIP9CheckMasternodesUpgraded = true;
+        consensus.fLLMQAllowDummyCommitments = false;
 
         checkpointData = (CCheckpointData) {
             boost::assign::map_list_of
@@ -324,6 +395,13 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_BIP147].nWindowSize = 2;
         consensus.vDeployments[Consensus::DEPLOYMENT_BIP147].nThreshold = 1; 
 
+        // Deployment of DIP0003
+        consensus.vDeployments[Consensus::DEPLOYMENT_DIP0003].bit = 3;
+        consensus.vDeployments[Consensus::DEPLOYMENT_DIP0003].nStartTime = 1544655600; // Dec 13th, 2018
+        consensus.vDeployments[Consensus::DEPLOYMENT_DIP0003].nTimeout = 1576191600; // Dec 13th, 2019
+        consensus.vDeployments[Consensus::DEPLOYMENT_DIP0003].nWindowSize = 100;
+        consensus.vDeployments[Consensus::DEPLOYMENT_DIP0003].nThreshold = 50; // 50% of 100
+
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000000000000000000200011"); 
 
@@ -365,6 +443,8 @@ public:
         assert(genesis.hashMerkleRoot == uint256S("0x818b7339dc6cdb78058dabba0a320efb86f903b25459375da6ee2857785f272e"));
        
         vFixedSeeds.clear();
+        vFixedSeeds = std::vector<SeedSpec6>(pnSeed6_test, pnSeed6_test + ARRAYLEN(pnSeed6_test));
+
         vSeeds.clear();
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,0);
@@ -379,17 +459,21 @@ public:
         // Testnet NachoCoin BIP44 coin type is '1' (All coin's testnet default)
         nExtCoinType = 1;
 
+        // long living quorum params
+        consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
+        consensus.llmqs[Consensus::LLMQ_400_60] = llmq400_60;
+        consensus.llmqs[Consensus::LLMQ_400_85] = llmq400_85;
+
         fMiningRequiresPeers = true;
         fDefaultConsistencyChecks = false;
         fRequireStandard = false;
+        fRequireRoutableExternalIP = true;
         fMineBlocksOnDemand = false;
         fAllowMultipleAddressesFromGroup = false;
         fAllowMultiplePorts = false;
 
         nPoolMaxTransactions = 3;
         nFulfilledRequestExpireTime = 5*60; // fulfilled requests expire in 5 minutes
-
-        strSporkAddress = "17WdKwh13jXUFgyLndCKVVuRQBD9MYJgtT";
 
         checkpointData = (CCheckpointData) {
             boost::assign::map_list_of
@@ -465,6 +549,13 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_BIP147].nWindowSize = 2;
         consensus.vDeployments[Consensus::DEPLOYMENT_BIP147].nThreshold = 1; 
 
+        // Deployment of DIP0003
+        consensus.vDeployments[Consensus::DEPLOYMENT_DIP0003].bit = 3;
+        consensus.vDeployments[Consensus::DEPLOYMENT_DIP0003].nStartTime = 1535752800; // Sep 1st, 2018
+        consensus.vDeployments[Consensus::DEPLOYMENT_DIP0003].nTimeout = 1567288800; // Sep 1st, 2019
+        consensus.vDeployments[Consensus::DEPLOYMENT_DIP0003].nWindowSize = 100;
+        consensus.vDeployments[Consensus::DEPLOYMENT_DIP0003].nThreshold = 50; // 50% of 100
+
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000000000000000000000");
 
@@ -524,6 +615,11 @@ public:
         // Testnet NachoCoin BIP44 coin type is '1' (All coin's testnet default)
         nExtCoinType = 1;
 
+        // long living quorum params
+        consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
+        consensus.llmqs[Consensus::LLMQ_400_60] = llmq400_60;
+        consensus.llmqs[Consensus::LLMQ_400_85] = llmq400_85;
+
         fMiningRequiresPeers = true;
         fDefaultConsistencyChecks = false;
         fRequireStandard = false;
@@ -533,8 +629,6 @@ public:
 
         nPoolMaxTransactions = 3;
         nFulfilledRequestExpireTime = 5*60; // fulfilled requests expire in 5 minutes
-
-        strSporkAddress = "17WdKwh13jXUFgyLndCKVVuRQBD9MYJgtT";
 
         checkpointData = (CCheckpointData) {
             boost::assign::map_list_of
@@ -547,6 +641,13 @@ public:
             2,                            // * we only have 2 coinbase transactions when a devnet is started up
             0                          // * estimated number of transactions per second
         };
+    }
+
+    void UpdateSubsidyAndDiffParams(int nMinimumDifficultyBlocks, int nHighSubsidyBlocks, int nHighSubsidyFactor)
+    {
+        consensus.nMinimumDifficultyBlocks = nMinimumDifficultyBlocks;
+        consensus.nHighSubsidyBlocks = nHighSubsidyBlocks;
+        consensus.nHighSubsidyFactor = nHighSubsidyFactor;
     }
 };
 static CDevNetParams *devNetParams;
@@ -600,6 +701,9 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_BIP147].bit = 2;
         consensus.vDeployments[Consensus::DEPLOYMENT_BIP147].nStartTime = 0;
         consensus.vDeployments[Consensus::DEPLOYMENT_BIP147].nTimeout = 999999999999ULL;
+        consensus.vDeployments[Consensus::DEPLOYMENT_DIP0003].bit = 3;
+        consensus.vDeployments[Consensus::DEPLOYMENT_DIP0003].nStartTime = 0;
+        consensus.vDeployments[Consensus::DEPLOYMENT_DIP0003].nTimeout = 999999999999ULL;
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x00");
@@ -646,14 +750,12 @@ public:
         fMiningRequiresPeers = false;
         fDefaultConsistencyChecks = true;
         fRequireStandard = false;
+        fRequireRoutableExternalIP = false;
         fMineBlocksOnDemand = true;
         fAllowMultipleAddressesFromGroup = true;
         fAllowMultiplePorts = true;
 
         nFulfilledRequestExpireTime = 5*60; // fulfilled requests expire in 5 minutes
-
-        // privKey: 5KCFszJYADjg69pBg9UkFk9UyESSBafmy6WPt9qBAMd4mK5MGnG
-        strSporkAddress = "19vrQHBxpkjdJ4FGaBBJgRimA7jesuFKuF";
 
         checkpointData = (CCheckpointData){
             boost::assign::map_list_of
@@ -679,12 +781,23 @@ public:
 
         // Regtest NachoCoin BIP44 coin type is '1' (All coin's testnet default)
         nExtCoinType = 1;
-   }
+
+        // long living quorum params
+        consensus.llmqs[Consensus::LLMQ_10_60] = llmq10_60;
+        consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
+    }
 
     void UpdateBIP9Parameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout)
     {
         consensus.vDeployments[d].nStartTime = nStartTime;
         consensus.vDeployments[d].nTimeout = nTimeout;
+    }
+
+    void UpdateBudgetParameters(int nMasternodePaymentsStartBlock, int nBudgetPaymentsStartBlock, int nSuperblockStartBlock)
+    {
+        consensus.nMasternodePaymentsStartBlock = nMasternodePaymentsStartBlock;
+        consensus.nBudgetPaymentsStartBlock = nBudgetPaymentsStartBlock;
+        consensus.nSuperblockStartBlock = nSuperblockStartBlock;
     }
 };
 static CRegTestParams regTestParams;
@@ -714,7 +827,9 @@ CChainParams& Params(const std::string& chain)
 void SelectParams(const std::string& network)
 {
     if (network == CBaseChainParams::DEVNET) {
-        devNetParams = new CDevNetParams();
+        devNetParams = (CDevNetParams*)new uint8_t[sizeof(CDevNetParams)];
+        memset(devNetParams, 0, sizeof(CDevNetParams));
+        new (devNetParams) CDevNetParams();
     }
 
     SelectBaseParams(network);
@@ -724,4 +839,15 @@ void SelectParams(const std::string& network)
 void UpdateRegtestBIP9Parameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout)
 {
     regTestParams.UpdateBIP9Parameters(d, nStartTime, nTimeout);
+}
+
+void UpdateRegtestBudgetParameters(int nMasternodePaymentsStartBlock, int nBudgetPaymentsStartBlock, int nSuperblockStartBlock)
+{
+    regTestParams.UpdateBudgetParameters(nMasternodePaymentsStartBlock, nBudgetPaymentsStartBlock, nSuperblockStartBlock);
+}
+
+void UpdateDevnetSubsidyAndDiffParams(int nMinimumDifficultyBlocks, int nHighSubsidyBlocks, int nHighSubsidyFactor)
+{
+    assert(devNetParams);
+    devNetParams->UpdateSubsidyAndDiffParams(nMinimumDifficultyBlocks, nHighSubsidyBlocks, nHighSubsidyFactor);
 }

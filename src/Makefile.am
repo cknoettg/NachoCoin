@@ -25,23 +25,25 @@ BITCOIN_INCLUDES=-I$(builddir) -I$(builddir)/obj $(BDB_CPPFLAGS) $(BOOST_CPPFLAG
 BITCOIN_INCLUDES += -I$(srcdir)/secp256k1/include
 BITCOIN_INCLUDES += $(UNIVALUE_CFLAGS)
 
-LIBBITCOIN_SERVER=libnachocoin_server.a
-LIBBITCOIN_COMMON=libnachocoin_common.a
-LIBBITCOIN_CONSENSUS=libnachocoin_consensus.a
-LIBBITCOIN_CLI=libnachocoin_cli.a
-LIBBITCOIN_UTIL=libnachocoin_util.a
-LIBBITCOIN_CRYPTO=crypto/libnachocoin_crypto.a
-LIBBITCOINQT=qt/libnachocoinqt.a
+BLS_LIBS=-lchiabls -lgmp
+
+LIBBITCOIN_SERVER=libnacho_server.a
+LIBBITCOIN_COMMON=libnacho_common.a
+LIBBITCOIN_CONSENSUS=libnacho_consensus.a
+LIBBITCOIN_CLI=libnacho_cli.a
+LIBBITCOIN_UTIL=libnacho_util.a
+LIBBITCOIN_CRYPTO=crypto/libnacho_crypto.a
+LIBBITCOINQT=qt/libnachoqt.a
 LIBSECP256K1=secp256k1/libsecp256k1.la
 
 if ENABLE_ZMQ
-LIBBITCOIN_ZMQ=libnachocoin_zmq.a
+LIBBITCOIN_ZMQ=libnacho_zmq.a
 endif
 if BUILD_BITCOIN_LIBS
-LIBBITCOINCONSENSUS=libnachocoinconsensus.la
+LIBBITCOINCONSENSUS=libnachoconsensus.la
 endif
 if ENABLE_WALLET
-LIBBITCOIN_WALLET=libnachocoin_wallet.a
+LIBBITCOIN_WALLET=libnacho_wallet.a
 endif
 
 $(LIBSECP256K1): $(wildcard secp256k1/src/*) $(wildcard secp256k1/include/*)
@@ -66,15 +68,15 @@ TESTS =
 BENCHMARKS =
 
 if BUILD_BITCOIND
-  bin_PROGRAMS += nachocoind
+  bin_PROGRAMS += nachod
 endif
 
 if BUILD_BITCOIN_UTILS
-  bin_PROGRAMS += nachocoin-cli nachocoin-tx
+  bin_PROGRAMS += nacho-cli nacho-tx
 endif
 
 .PHONY: FORCE check-symbols check-security
-# nachocoin core #
+# nacho core #
 BITCOIN_CORE_H = \
   addrdb.h \
   activemasternode.h \
@@ -106,6 +108,13 @@ BITCOIN_CORE_H = \
   core_io.h \
   core_memusage.h \
   cuckoocache.h \
+  ctpl.h \
+  evo/evodb.h \
+  evo/specialtx.h \
+  evo/providertx.h \
+  evo/deterministicmns.h \
+  evo/cbtx.h \
+  evo/simplifiedmns.h \
   privatesend.h \
   privatesend-client.h \
   privatesend-server.h \
@@ -130,6 +139,11 @@ BITCOIN_CORE_H = \
   keystore.h \
   dbwrapper.h \
   limitedmap.h \
+  llmq/quorums_commitment.h \
+  llmq/quorums_blockprocessor.h \
+  llmq/quorums_dummydkg.h \
+  llmq/quorums_utils.h \
+  llmq/quorums_init.h \
   masternode.h \
   masternode-payments.h \
   masternode-sync.h \
@@ -148,7 +162,6 @@ BITCOIN_CORE_H = \
   noui.h \
   policy/fees.h \
   policy/policy.h \
-  policy/rbf.h \
   pow.h \
   protocol.h \
   random.h \
@@ -164,6 +177,8 @@ BITCOIN_CORE_H = \
   script/ismine.h \
   spork.h \
   streams.h \
+  support/allocators/mt_pooled_secure.h \
+  support/allocators/pooled_secure.h \
   support/allocators/secure.h \
   support/allocators/zeroafterfree.h \
   support/cleanse.h \
@@ -201,12 +216,12 @@ obj/build.h: FORCE
 	@$(MKDIR_P) $(builddir)/obj
 	@$(top_srcdir)/share/genbuild.sh $(abs_top_builddir)/src/obj/build.h \
 	  $(abs_top_srcdir)
-libnachocoin_util_a-clientversion.$(OBJEXT): obj/build.h
+libnacho_util_a-clientversion.$(OBJEXT): obj/build.h
 
-# server: shared between nachocoind and nachocoin-qt
-libnachocoin_server_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
-libnachocoin_server_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-libnachocoin_server_a_SOURCES = \
+# server: shared between nachod and nacho-qt
+libnacho_server_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
+libnacho_server_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libnacho_server_a_SOURCES = \
   activemasternode.cpp \
   addrman.cpp \
   addrdb.cpp \
@@ -216,6 +231,12 @@ libnachocoin_server_a_SOURCES = \
   chain.cpp \
   checkpoints.cpp \
   dsnotificationinterface.cpp \
+  evo/evodb.cpp \
+  evo/specialtx.cpp \
+  evo/providertx.cpp \
+  evo/deterministicmns.cpp \
+  evo/cbtx.cpp \
+  evo/simplifiedmns.cpp \
   httprpc.cpp \
   httpserver.cpp \
   init.cpp \
@@ -227,6 +248,11 @@ libnachocoin_server_a_SOURCES = \
   governance-validators.cpp \
   governance-vote.cpp \
   governance-votedb.cpp \
+  llmq/quorums_commitment.cpp \
+  llmq/quorums_blockprocessor.cpp \
+  llmq/quorums_dummydkg.cpp \
+  llmq/quorums_utils.cpp \
+  llmq/quorums_init.cpp \
   masternode.cpp \
   masternode-payments.cpp \
   masternode-sync.cpp \
@@ -252,6 +278,7 @@ libnachocoin_server_a_SOURCES = \
   rpc/misc.cpp \
   rpc/net.cpp \
   rpc/rawtransaction.cpp \
+  rpc/rpcevo.cpp \
   rpc/server.cpp \
   script/sigcache.cpp \
   script/ismine.cpp \
@@ -268,20 +295,20 @@ libnachocoin_server_a_SOURCES = \
   $(BITCOIN_CORE_H)
 
 if ENABLE_ZMQ
-libnachocoin_zmq_a_CPPFLAGS = $(BITCOIN_INCLUDES) $(ZMQ_CFLAGS)
-libnachocoin_zmq_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-libnachocoin_zmq_a_SOURCES = \
+libnacho_zmq_a_CPPFLAGS = $(BITCOIN_INCLUDES) $(ZMQ_CFLAGS)
+libnacho_zmq_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libnacho_zmq_a_SOURCES = \
   zmq/zmqabstractnotifier.cpp \
   zmq/zmqnotificationinterface.cpp \
   zmq/zmqpublishnotifier.cpp
 endif
 
 
-# wallet: shared between nachocoind and nachocoin-qt, but only linked
+# wallet: shared between nachod and nacho-qt, but only linked
 # when wallet enabled
-libnachocoin_wallet_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-libnachocoin_wallet_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-libnachocoin_wallet_a_SOURCES = \
+libnacho_wallet_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+libnacho_wallet_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libnacho_wallet_a_SOURCES = \
   keepass.cpp \
   privatesend-client.cpp \
   privatesend-util.cpp \
@@ -291,13 +318,12 @@ libnachocoin_wallet_a_SOURCES = \
   wallet/rpcwallet.cpp \
   wallet/wallet.cpp \
   wallet/walletdb.cpp \
-  policy/rbf.cpp \
   $(BITCOIN_CORE_H)
 
 # crypto primitives library
-crypto_libnachocoin_crypto_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_CONFIG_INCLUDES) $(PIC_FLAGS)
-crypto_libnachocoin_crypto_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) $(PIC_FLAGS)
-crypto_libnachocoin_crypto_a_SOURCES = \
+crypto_libnacho_crypto_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_CONFIG_INCLUDES) $(PIC_FLAGS)
+crypto_libnacho_crypto_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) $(PIC_FLAGS)
+crypto_libnacho_crypto_a_SOURCES = \
   crypto/aes.cpp \
   crypto/aes.h \
   crypto/common.h \
@@ -316,7 +342,7 @@ crypto_libnachocoin_crypto_a_SOURCES = \
   crypto/sha512.h
 
 # x11
-crypto_libnachocoin_crypto_a_SOURCES += \
+crypto_libnacho_crypto_a_SOURCES += \
   crypto/blake.c \
   crypto/bmw.c \
   crypto/cubehash.c \
@@ -342,12 +368,14 @@ crypto_libnachocoin_crypto_a_SOURCES += \
   crypto/sph_types.h
 
 # consensus: shared between all executables that validate any consensus rules.
-libnachocoin_consensus_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-libnachocoin_consensus_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-libnachocoin_consensus_a_SOURCES = \
+libnacho_consensus_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+libnacho_consensus_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libnacho_consensus_a_SOURCES = \
   amount.h \
   arith_uint256.cpp \
   arith_uint256.h \
+  bls/bls.cpp \
+  bls/bls.h \
   consensus/merkle.cpp \
   consensus/merkle.h \
   consensus/params.h \
@@ -361,7 +389,7 @@ libnachocoin_consensus_a_SOURCES = \
   primitives/transaction.h \
   pubkey.cpp \
   pubkey.h \
-  script/nachocoinconsensus.cpp \
+  script/nachoconsensus.cpp \
   script/interpreter.cpp \
   script/interpreter.h \
   script/script.cpp \
@@ -369,6 +397,7 @@ libnachocoin_consensus_a_SOURCES = \
   script/script_error.cpp \
   script/script_error.h \
   serialize.h \
+  streams.h \
   tinyformat.h \
   uint256.cpp \
   uint256.h \
@@ -376,10 +405,10 @@ libnachocoin_consensus_a_SOURCES = \
   utilstrencodings.h \
   version.h
 
-# common: shared between nachocoind, and nachocoin-qt and non-server tools
-libnachocoin_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-libnachocoin_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-libnachocoin_common_a_SOURCES = \
+# common: shared between nachod, and nacho-qt and non-server tools
+libnacho_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+libnacho_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libnacho_common_a_SOURCES = \
   amount.cpp \
   base58.cpp \
   bip39.cpp \
@@ -403,9 +432,13 @@ libnachocoin_common_a_SOURCES = \
 # util: shared between all executables.
 # This library *must* be included to make sure that the glibc
 # backward-compatibility objects and their sanity checks are linked.
-libnachocoin_util_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-libnachocoin_util_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-libnachocoin_util_a_SOURCES = \
+libnacho_util_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+libnacho_util_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libnacho_util_a_SOURCES = \
+  bls/bls_ies.cpp \
+  bls/bls_ies.h \
+  bls/bls_worker.cpp \
+  bls/bls_worker.h \
   support/lockedpool.cpp \
   chainparamsbase.cpp \
   clientversion.cpp \
@@ -424,30 +457,31 @@ libnachocoin_util_a_SOURCES = \
   $(BITCOIN_CORE_H)
 
 if GLIBC_BACK_COMPAT
-libnachocoin_util_a_SOURCES += compat/glibc_compat.cpp
+libnacho_util_a_SOURCES += compat/glibc_compat.cpp
+AM_LDFLAGS += -Wl,--wrap=log2f -Wl,--wrap=__divmoddi4
 endif
 
-# cli: shared between nachocoin-cli and nachocoin-qt
-libnachocoin_cli_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-libnachocoin_cli_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-libnachocoin_cli_a_SOURCES = \
+# cli: shared between nacho-cli and nacho-qt
+libnacho_cli_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+libnacho_cli_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libnacho_cli_a_SOURCES = \
   rpc/client.cpp \
   $(BITCOIN_CORE_H)
 
-nodist_libnachocoin_util_a_SOURCES = $(srcdir)/obj/build.h
+nodist_libnacho_util_a_SOURCES = $(srcdir)/obj/build.h
 #
 
-# nachocoind binary #
-nachocoind_SOURCES = nachocoind.cpp
-nachocoind_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-nachocoind_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-nachocoind_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+# nachod binary #
+nachod_SOURCES = nachod.cpp
+nachod_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+nachod_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+nachod_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
-nachocoind_SOURCES += nachocoind-res.rc
+nachod_SOURCES += nachod-res.rc
 endif
 
-nachocoind_LDADD = \
+nachod_LDADD = \
   $(LIBBITCOIN_SERVER) \
   $(LIBBITCOIN_COMMON) \
   $(LIBUNIVALUE) \
@@ -460,37 +494,37 @@ nachocoind_LDADD = \
   $(LIBMEMENV) \
   $(LIBSECP256K1)
 
-nachocoind_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS)
+nachod_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(BLS_LIBS)
 
-# nachocoin-cli binary #
-nachocoin_cli_SOURCES = nachocoin-cli.cpp
-nachocoin_cli_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CFLAGS)
-nachocoin_cli_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-nachocoin_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+# nacho-cli binary #
+nacho_cli_SOURCES = nacho-cli.cpp
+nacho_cli_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CFLAGS)
+nacho_cli_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+nacho_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
-nachocoin_cli_SOURCES += nachocoin-cli-res.rc
+nacho_cli_SOURCES += nacho-cli-res.rc
 endif
 
-nachocoin_cli_LDADD = \
+nacho_cli_LDADD = \
   $(LIBBITCOIN_CLI) \
   $(LIBUNIVALUE) \
   $(LIBBITCOIN_UTIL) \
   $(LIBBITCOIN_CRYPTO)
-nachocoin_cli_LDADD += $(BOOST_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
+nacho_cli_LDADD += $(BOOST_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS) $(BLS_LIBS)
 #
 
-# nachocoin-tx binary #
-nachocoin_tx_SOURCES = nachocoin-tx.cpp
-nachocoin_tx_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-nachocoin_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-nachocoin_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+# nacho-tx binary #
+nacho_tx_SOURCES = nacho-tx.cpp
+nacho_tx_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+nacho_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+nacho_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
-nachocoin_tx_SOURCES += nachocoin-tx-res.rc
+nacho_tx_SOURCES += nacho-tx-res.rc
 endif
 
-nachocoin_tx_LDADD = \
+nacho_tx_LDADD = \
   $(LIBUNIVALUE) \
   $(LIBBITCOIN_COMMON) \
   $(LIBBITCOIN_UTIL) \
@@ -498,22 +532,22 @@ nachocoin_tx_LDADD = \
   $(LIBBITCOIN_CRYPTO) \
   $(LIBSECP256K1)
 
-nachocoin_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
+nacho_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS) $(BLS_LIBS)
 #
 
-# nachocoinconsensus library #
+# nachoconsensus library #
 if BUILD_BITCOIN_LIBS
-include_HEADERS = script/nachocoinconsensus.h
-libnachocoinconsensus_la_SOURCES = $(crypto_libnachocoin_crypto_a_SOURCES) $(libnachocoin_consensus_a_SOURCES)
+include_HEADERS = script/nachoconsensus.h
+libnachoconsensus_la_SOURCES = $(crypto_libnacho_crypto_a_SOURCES) $(libnacho_consensus_a_SOURCES)
 
 if GLIBC_BACK_COMPAT
-  libnachocoinconsensus_la_SOURCES += compat/glibc_compat.cpp
+  libnachoconsensus_la_SOURCES += compat/glibc_compat.cpp
 endif
 
-libnachocoinconsensus_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS)
-libnachocoinconsensus_la_LIBADD = $(LIBSECP256K1)
-libnachocoinconsensus_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include -DBUILD_BITCOIN_INTERNAL
-libnachocoinconsensus_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libnachoconsensus_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS)
+libnachoconsensus_la_LIBADD = $(LIBSECP256K1) $(BLS_LIBS)
+libnachoconsensus_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include -DBUILD_BITCOIN_INTERNAL
+libnachoconsensus_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 
 endif
 #
@@ -539,9 +573,12 @@ CLEANFILES += wallet/*.gcda wallet/*.gcno
 CLEANFILES += wallet/test/*.gcda wallet/test/*.gcno
 CLEANFILES += zmq/*.gcda zmq/*.gcno
 
+IMMER_DIST = immer
+
 DISTCLEANFILES = obj/build.h
 
 EXTRA_DIST = $(CTAES_DIST)
+EXTRA_DIST += $(IMMER_DIST)
 
 
 config/nachocoin-config.h: config/stamp-h1
@@ -588,11 +625,11 @@ include Makefile.leveldb.include
 endif
 
 if ENABLE_TESTS
-include Makefile.test.include
+#include Makefile.test.include
 endif
 
 if ENABLE_BENCH
-include Makefile.bench.include
+#include Makefile.bench.include
 endif
 
 if ENABLE_QT
