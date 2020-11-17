@@ -12,7 +12,8 @@
  */
 
 
-static const int PROTOCOL_VERSION = 70213;
+static const int PROTOCOL_VERSION = 70214;
+
 
 //! initial proto version, to be increased after version/verack negotiation
 static const int INIT_PROTO_VERSION = 209;
@@ -21,7 +22,7 @@ static const int INIT_PROTO_VERSION = 209;
 static const int GETHEADERS_VERSION = 70077;
 
 //! disconnect from peers older than this proto version
-static const int MIN_PEER_PROTO_VERSION = 70211;
+static const int MIN_PEER_PROTO_VERSION = 70212;
 
 //! disconnect from peers older than this proto version when DIP3 is activated via the BIP9 deployment
 static const int MIN_PEER_PROTO_VERSION_DIP3 = 70213;
