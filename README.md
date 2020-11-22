@@ -81,3 +81,4 @@ cmake .
 make install
 
 cd ..
+.
